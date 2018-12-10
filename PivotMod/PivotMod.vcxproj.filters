@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Base">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Base\Utilities">
+      <UniqueIdentifier>{d335f73c-af90-424b-a2fb-b60495b434dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base\Base manager">
+      <UniqueIdentifier>{4217eb7a-8331-43af-a8f9-53709f9a4819}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{37f9e84f-da01-4629-8588-d1cebd6e3e8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows\TestWindow">
+      <UniqueIdentifier>{997e9b66-e287-4b86-8477-b3a4ba0de88a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mod manager">
+      <UniqueIdentifier>{ab54f468-c8d3-406f-93d1-12799f06255c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base\CBaseWindow">
+      <UniqueIdentifier>{f4e74dd6-3909-4373-a718-801647819753}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DLLMain.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Base.cpp">
+      <Filter>Base\Base manager</Filter>
+    </ClCompile>
+    <ClCompile Include="TestWindow.cpp">
+      <Filter>Windows\TestWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="ModManager.cpp">
+      <Filter>Mod manager</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CMenuItem.h">
+      <Filter>Base\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Base.h">
+      <Filter>Base\Base manager</Filter>
+    </ClInclude>
+    <ClInclude Include="APIHook.h">
+      <Filter>Base\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CBaseWindow.h">
+      <Filter>Base\CBaseWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="TestWindow.h">
+      <Filter>Windows\TestWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="ModManager.h">
+      <Filter>Mod manager</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
