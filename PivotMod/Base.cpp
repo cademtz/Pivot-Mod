@@ -1,5 +1,7 @@
 #include "Base.h"
 #include "APIHook.h"
+#include "Signatures.h"
+#include "ModManager.h"
 
 /*
  *	Description:
@@ -10,6 +12,7 @@
  */
 
 CBaseManager gBase;
+CSignatures gSig;
 
 // ==========  Hook all our stuff before Pivot starts ==========
 
@@ -17,16 +20,37 @@ CBaseManager gBase;
 
 typedef BOOL(WINAPI* InsertMenuItem_t)(_In_ HMENU hmenu, _In_ UINT item, _In_ BOOL fByPosition, _In_ LPCMENUITEMINFOA lpmi);
 typedef ATOM(WINAPI* RegisterClass_t)(_In_ CONST WNDCLASSA *lpWndClass);
+typedef BOOL(WINAPI* LineTo_t)(_In_ HDC hdc, _In_ int x, _In_ int y);
 typedef HWND(WINAPI* CreateWindow_t)(
 	_In_ DWORD dwExStyle, _In_opt_ LPCSTR lpClassName, _In_opt_ LPCSTR lpWindowName, _In_ DWORD dwStyle,
 	_In_ int X, _In_ int Y, _In_ int nWidth, _In_ int nHeight,
 	_In_opt_ HWND hWndParent, _In_opt_ HMENU hMenu, _In_opt_ HINSTANCE hInstance,
 	_In_opt_ LPVOID lpParam);
 
-hook_t hk_InsertMenuItem, hk_RegisterClass, hk_CreateWindow;
+
+hook_t hk_InsertMenuItem, hk_RegisterClass, hk_CreateWindow, hk_LineTo;
 InsertMenuItem_t pInsertMenuItem;
 RegisterClass_t pRegisterClass;
 CreateWindow_t pCreateWindow;
+LineTo_t pLineTo;
+
+BOOL WINAPI Hooked_LineTo(_In_ HDC hdc, _In_ int x, _In_ int y)
+{
+	return gMod.OnLineTo(hdc, x, y);
+}
+
+HFONT CBaseManager::GetFont()
+{
+	static HFONT hFont = CreateFontA(17, 0, 0, 0, FW_DONTCARE, false, false,
+		0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+		FIXED_PITCH | FF_MODERN, "Segoe UI");
+	return hFont;
+}
+
+BOOL WINAPI CBaseManager::LineTo(HDC hdc, int x, int y)
+{
+	return pLineTo(hdc, x, y);
+}
 
 void CBaseManager::InitHooks()
 {
@@ -36,14 +60,17 @@ void CBaseManager::InitHooks()
 	hook::InitializeHook(&hk_InsertMenuItem, "user32.dll", "InsertMenuItemA", gBase.OnInsertMenuItem);
 	//hook::InitializeHook(&hk_RegisterClass, "user32.dll", "RegisterClassA", gBase.OnRegisterClass);
 	//hook::InitializeHook(&hk_CreateWindow, "user32.dll", "CreateWindowExA", gBase.OnCreateWindow);
+	hook::InitializeHook(&hk_LineTo, "gdi32.dll", "LineTo", Hooked_LineTo);
 
 	pInsertMenuItem = (InsertMenuItem_t)hk_InsertMenuItem.APIFunction;
 	//pRegisterClass = (RegisterClass_t)hk_RegisterClass.APIFunction;
 	//pCreateWindow = (CreateWindow_t)hk_CreateWindow.APIFunction;
+	pLineTo = (LineTo_t)hk_LineTo.APIFunction;
 
 	hook::InsertHook(&hk_InsertMenuItem);
 	//hook::InsertHook(&hk_RegisterClass);
 	//hook::InsertHook(&hk_CreateWindow);
+	hook::InsertHook(&hk_LineTo);
 }
 
 #pragma endregion
@@ -71,6 +98,7 @@ DWORD WINAPI CBaseManager::MainThread(LPVOID pArgs)
 	// Change the Pivot window title (for fun) and hook it
 	SetWindowText(mainWnd, "Pivot Animator - Base mod by \"Hold on!\"");
 	gBase.piv_wndproc = (WNDPROC)SetWindowLongPtr(mainWnd, GWLP_WNDPROC, (LONG)gMod.OnPivotWndproc);
+	gBase.hPiv_wnd = mainWnd;
 
 	while (true) // Let the window manager take over our thread
 		gMod.RunWindows();

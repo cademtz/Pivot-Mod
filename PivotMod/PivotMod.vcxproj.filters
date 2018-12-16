@@ -23,6 +23,12 @@
     <Filter Include="Base\CBaseWindow">
       <UniqueIdentifier>{f4e74dd6-3909-4373-a718-801647819753}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pivot">
+      <UniqueIdentifier>{5be29986-cacb-4877-a43c-49ae12a65edf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows\CamWindow">
+      <UniqueIdentifier>{17a6d183-8924-4128-aae6-fa248a1e115a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -36,6 +42,12 @@
     </ClCompile>
     <ClCompile Include="ModManager.cpp">
       <Filter>Mod manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Pivot.cpp">
+      <Filter>Pivot</Filter>
+    </ClCompile>
+    <ClCompile Include="CamWindow.cpp">
+      <Filter>Base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -56,6 +68,15 @@
     </ClInclude>
     <ClInclude Include="ModManager.h">
       <Filter>Mod manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Pivot.h">
+      <Filter>Pivot</Filter>
+    </ClInclude>
+    <ClInclude Include="Signatures.h">
+      <Filter>Base\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CamWindow.h">
+      <Filter>Windows\CamWindow</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

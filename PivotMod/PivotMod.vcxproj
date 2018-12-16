@@ -94,7 +94,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -128,7 +128,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -154,15 +154,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Base.cpp" />
+    <ClCompile Include="CamWindow.cpp" />
     <ClCompile Include="DLLMain.cpp" />
+    <ClCompile Include="Pivot.cpp" />
     <ClCompile Include="TestWindow.cpp" />
     <ClCompile Include="ModManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="APIHook.h" />
     <ClInclude Include="Base.h" />
+    <ClInclude Include="CamWindow.h" />
     <ClInclude Include="CBaseWindow.h" />
     <ClInclude Include="CMenuItem.h" />
+    <ClInclude Include="Pivot.h" />
+    <ClInclude Include="Signatures.h" />
     <ClInclude Include="TestWindow.h" />
     <ClInclude Include="ModManager.h" />
   </ItemGroup>

@@ -6,6 +6,7 @@
 
 /*
  *	Description:
+ *		Holds all common headers needed in most other files
  *		Handles all the dirty work. Hooks Pivot's functions and calls all our events.
  *
  *		Ordered by interesting stuff, so things on the bottom aren't interesting
@@ -19,8 +20,15 @@ public:
 	inline HINSTANCE GetInstance() const { return hInst; }
 	// - Returns a handle to our main thread
 	inline HANDLE GetMainThread() const { return hMainThread; }
+	// - Returns a handle to Pivot's main window
+	inline HWND GetPivotWnd() const { return hPiv_wnd; }
 	// - Returns a pointer to Pivot's original window procedure
 	inline WNDPROC GetPivotWndProc() const { return piv_wndproc; }
+	// - Returns our default font
+	HFONT GetFont();
+
+	// - Call original pointer to LineTo
+	static BOOL WINAPI LineTo(HDC hdc, int x, int y);
 
 	// - Gives the user a formatted warning message
 	static void Error(const char* szFormat, const char* szArgs = nullptr, ...);
@@ -44,6 +52,8 @@ private:
 	HINSTANCE hInst;
 	// - Stored handle to our main thread
 	HANDLE hMainThread;
+	// - Stored handle to Pivot's main window
+	HWND hPiv_wnd;
 	// - Stored pointer of Pivot's original windows procedure function
 	WNDPROC piv_wndproc;
 

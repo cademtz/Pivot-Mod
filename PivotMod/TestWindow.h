@@ -6,7 +6,7 @@
  *	Description:
  *		Example of a custom window with some basic controls.
  *
- *		This window appears when you select Piv Mod > Preferences.
+ *		This window appears when you select Piv Mod > Effects.
  *		This is all template code you can copy to use for another window.
  *		Only thing you need to change is the name, which is called "CTestWindow" for this example
  *
