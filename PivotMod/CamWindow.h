@@ -4,7 +4,7 @@
 
 /*
  *	Description:
- *		Window to enable / disable camera tools
+ *		Window to enable / disable camera tools.
  *
  *		This window appears when you select Piv Mod > Camera.
  */

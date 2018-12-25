@@ -1,4 +1,5 @@
 #include "Base.h"
+#include "Pivot.h"
 #include "APIHook.h"
 #include "Signatures.h"
 #include "ModManager.h"
@@ -34,33 +35,22 @@ RegisterClass_t pRegisterClass;
 CreateWindow_t pCreateWindow;
 LineTo_t pLineTo;
 
-BOOL WINAPI Hooked_LineTo(_In_ HDC hdc, _In_ int x, _In_ int y)
-{
-	return gMod.OnLineTo(hdc, x, y);
-}
-
-HFONT CBaseManager::GetFont()
-{
-	static HFONT hFont = CreateFontA(17, 0, 0, 0, FW_DONTCARE, false, false,
-		0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-		FIXED_PITCH | FF_MODERN, "Segoe UI");
-	return hFont;
-}
-
-BOOL WINAPI CBaseManager::LineTo(HDC hdc, int x, int y)
-{
-	return pLineTo(hdc, x, y);
-}
+#include "JumpHook.h"
+CJumpHook jmp_MainFormCreate;
+CJumpHook jmp_DrawAnimBorder;
+CJumpHook jmp_PaintBoxMouseMove;
+CJumpHook jmp_PaintBoxMouseDown;
+CJumpHook jmp_PaintBoxMouseUp;
 
 void CBaseManager::InitHooks()
 {
 	// Get info and original pointer to Win API functions
 	// Then we can insert our hooks to customize Pivot's windows
 
-	hook::InitializeHook(&hk_InsertMenuItem, "user32.dll", "InsertMenuItemA", gBase.OnInsertMenuItem);
+	hook::InitializeHook(&hk_InsertMenuItem, "user32.dll", "InsertMenuItemA", gBase.Hooked_InsertMenuItem);
 	//hook::InitializeHook(&hk_RegisterClass, "user32.dll", "RegisterClassA", gBase.OnRegisterClass);
-	//hook::InitializeHook(&hk_CreateWindow, "user32.dll", "CreateWindowExA", gBase.OnCreateWindow);
-	hook::InitializeHook(&hk_LineTo, "gdi32.dll", "LineTo", Hooked_LineTo);
+	//hook::InitializeHook(&hk_CreateWindow, "user32.dll", "CreateWindowExA", gBase.Hooked_CreateWindow);
+	hook::InitializeHook(&hk_LineTo, "gdi32.dll", "LineTo", gBase.Hooked_LineTo);
 
 	pInsertMenuItem = (InsertMenuItem_t)hk_InsertMenuItem.APIFunction;
 	//pRegisterClass = (RegisterClass_t)hk_RegisterClass.APIFunction;
@@ -71,6 +61,23 @@ void CBaseManager::InitHooks()
 	//hook::InsertHook(&hk_RegisterClass);
 	//hook::InsertHook(&hk_CreateWindow);
 	hook::InsertHook(&hk_LineTo);
+
+	DWORD pMainFormCreate = gSig.GetPivotSig("55 8B EC 6A 00 53 56 57 8B F0");
+	DWORD pDrawAnimBorderLine = gSig.GetPivotSig("55 8B EC 53 56 57 8B D9 8B FA");
+	DWORD pPaintBoxMouseMove = gSig.GetPivotSig("55 8B EC 83 C4 D4 53 56 57 8B D8 33 D2");
+	DWORD pPaintBoxMouseDown = gSig.GetPivotSig("55 8B EC 83 C4 EC 53 56 57 8B D8 8B 7D 0C");
+	DWORD pPaintBoxMouseUp = gSig.GetPivotSig("55 8B EC 83 C4 F0 53 56 57 8B F0 8B 45 10");
+	CHECK_SIG(pMainFormCreate);
+	CHECK_SIG(pDrawAnimBorderLine);
+	CHECK_SIG(pPaintBoxMouseMove);
+	CHECK_SIG(pPaintBoxMouseDown);
+	CHECK_SIG(pPaintBoxMouseUp);
+
+	jmp_MainFormCreate.Hook(pMainFormCreate, gBase.Hooked_MainFormCreate, 5);
+	jmp_DrawAnimBorder.Hook(pDrawAnimBorderLine, gBase.Hooked_DrawAnimBorderLine, 5);
+	jmp_PaintBoxMouseMove.Hook(pPaintBoxMouseMove, gBase.Hooked_EditPaintBoxMouseMove, 6);
+	jmp_PaintBoxMouseDown.Hook(pPaintBoxMouseDown, gBase.Hooked_EditPaintBoxMouseDown, 6);
+	jmp_PaintBoxMouseUp.Hook(pPaintBoxMouseUp, gBase.Hooked_EditPaintBoxMouseUp, 6);
 }
 
 #pragma endregion
@@ -95,7 +102,7 @@ DWORD WINAPI CBaseManager::MainThread(LPVOID pArgs)
 		mainWnd = GetForegroundWindow();
 	}
 
-	// Change the Pivot window title (for fun) and hook it
+	// Change the Pivot window title (for fun) and hook it for user input on the menu items
 	SetWindowText(mainWnd, "Pivot Animator - Base mod by \"Hold on!\"");
 	gBase.piv_wndproc = (WNDPROC)SetWindowLongPtr(mainWnd, GWLP_WNDPROC, (LONG)gMod.OnPivotWndproc);
 	gBase.hPiv_wnd = mainWnd;
@@ -123,12 +130,11 @@ void CBaseManager::OnAttach(HINSTANCE Instance)
 }
 
 #include "CMenuItem.h"
-BOOL WINAPI CBaseManager::OnInsertMenuItem(_In_ HMENU hmenu, _In_ UINT item, _In_ BOOL fByPosition, _In_ LPCMENUITEMINFOA lpmi)
+BOOL WINAPI CBaseManager::Hooked_InsertMenuItem(_In_ HMENU hmenu, _In_ UINT item, _In_ BOOL fByPosition, _In_ LPCMENUITEMINFOA lpmi)
 {
-	static bool bOnce = true;
-	if (!strcmp(lpmi->dwTypeData, "&Help") && bOnce)
+	if (!strcmp(lpmi->dwTypeData, "&Help"))
 	{
-		bOnce = false; // Run once, before the 'Help' tab is added so we can keep it at the end
+		// Run once, before the 'Help' tab is added so we can keep it at the end
 		gMod.AddOptions(hmenu, item, fByPosition, lpmi);
 		hook::Unhook(&hk_InsertMenuItem); // We've done our job. Time to unhook
 	}
@@ -136,11 +142,148 @@ BOOL WINAPI CBaseManager::OnInsertMenuItem(_In_ HMENU hmenu, _In_ UINT item, _In
 	return pInsertMenuItem(hmenu, item, fByPosition, lpmi);
 }
 
+DWORD pJump;
+int __declspec(naked) CBaseManager::Hooked_MainFormCreate()
+{
+	__asm
+	{
+		push eax
+		mov Pivot::pMainForm, eax
+	}
+
+	pJump = jmp_MainFormCreate.GetOldCode();
+
+	__asm
+	{
+		pop eax
+		jmp pJump // When jumping, the original function returns for us
+	}
+}
+
+int __declspec(naked) CBaseManager::Hooked_DrawAnimBorderLine()
+{
+	// Save these registers for calling TMainForm::DrawAnimBorderLine
+	__asm
+	{
+		push eax
+		push edx
+		push ecx
+	}
+
+	// Get a pointer to the original ASM, and skip over the length where our hook is
+	pJump = jmp_DrawAnimBorder.GetOldCode();
+	
+	// Restore the registers' original values to call the original function
+	__asm
+	{
+		pop ecx
+		pop edx
+		pop eax
+		call pJump
+	}
+
+	gMod.OnDrawOverlay(Pivot::pMainForm->GetCanvasHDC());
+	
+	__asm retn; // Force a return in ASM because C++ will try to stop us
+}
+
+int tempx, tempy;
+int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseMove(int y, int x)
+{
+	__asm push eax;
+
+	__asm
+	{
+		mov eax, [esp + 8]	// Get y
+		mov [tempy], eax	// Move y to tempy
+		mov eax, [esp + 12]	// Get x
+		mov [tempx], eax	// Move x to tempx
+	}
+
+	Pivot::pMainForm->UpdateMousePos(tempx, tempy);
+	gMod.OnMouseMove();
+	pJump = jmp_PaintBoxMouseMove.GetOldCode();
+
+	__asm
+	{
+		pop eax
+		jmp pJump
+	}
+}
+
+BYTE tempb;
+int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseDown(char arg4, int arg3, int arg2)
+{
+	__asm push eax;
+
+	__asm
+	{
+		mov al, [esp + 10h]
+		mov [tempb], al
+	}
+
+	Pivot::pMainForm->UpdateMouseDown(tempb);
+	gMod.OnMouseClick();
+	pJump = jmp_PaintBoxMouseDown.GetOldCode();
+
+	__asm
+	{
+		pop eax
+		jmp pJump
+	}
+}
+
+void testdown(BYTE state)
+{
+	const char* szState = "Blank";
+	if (state == 0)
+		szState = "Left";
+	else
+		szState = "Right";
+
+	MessageBox(0, szState, "Info", 0);
+}
+
+int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseUp(char arg5, int arg4, int arg3)
+{
+	__asm push eax;
+
+	__asm mov [tempb], cl
+
+	Pivot::pMainForm->UpdateMouseUp(tempb);
+	gMod.OnMouseRelease();
+	pJump = jmp_PaintBoxMouseUp.GetOldCode();
+
+	__asm
+	{
+		pop eax
+		jmp pJump
+	}
+}
+
+BOOL WINAPI CBaseManager::Hooked_LineTo(_In_ HDC hdc, _In_ int x, _In_ int y)
+{
+	return gMod.OnLineTo(hdc, x, y);
+}
+
 #pragma endregion
 
 // ==========  Error handling and basic utilities  ==========
 
 #pragma region Utilities
+
+HFONT CBaseManager::GetFont()
+{
+	static HFONT hFont = CreateFontA(17, 0, 0, 0, FW_DONTCARE, false, false,
+		0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+		FIXED_PITCH | FF_MODERN, "Segoe UI");
+	return hFont;
+}
+
+BOOL WINAPI CBaseManager::LineTo(HDC hdc, int x, int y)
+{
+	return pLineTo(hdc, x, y);
+}
 
 void CBaseManager::Error(const char* szFormat, const char* szArgs, ...)
 {
@@ -180,7 +323,7 @@ ATOM WINAPI CBaseManager::OnRegisterClass(WNDCLASSA * wndc)
 	return pRegisterClass(wndc);
 }
 
-HWND WINAPI CBaseManager::OnCreateWindow(
+HWND WINAPI CBaseManager::Hooked_CreateWindow(
 	_In_ DWORD dwExStyle, _In_opt_ LPCSTR lpClassName, _In_opt_ LPCSTR lpWindowName, _In_ DWORD dwStyle,
 	_In_ int X, _In_ int Y, _In_ int nWidth, _In_ int nHeight,
 	_In_opt_ HWND hWndParent, _In_opt_ HMENU hMenu, _In_opt_ HINSTANCE hInstance,

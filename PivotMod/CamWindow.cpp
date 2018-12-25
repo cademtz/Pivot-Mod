@@ -3,7 +3,7 @@
 
 /*
  *	Description:
- *		Window to enable / disable camera tools
+ *		Window to enable / disable camera tools.
  *
  *		This window appears when you select Piv Mod > Camera.
  */
@@ -19,6 +19,7 @@ void CCamWindow::OnCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 }
 
 #include "Pivot.h"
+#include "Camera.h"
 LRESULT CCamWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	LRESULT result = 0;
@@ -35,7 +36,8 @@ LRESULT CCamWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		if ((HWND)lparam == hCamEnabled)
 		{
 			Instance().cam_enabled = SendMessage(hCamEnabled, BM_GETCHECK, 0, 0) == BST_CHECKED;
-			Pivot::MainForm::DrawFigures();
+			gCam.UpdateCamera(Instance().CamEnabled());
+			Pivot::pMainForm->DrawFigures();
 		}
 		break;
 	default:

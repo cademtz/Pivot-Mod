@@ -11,12 +11,6 @@
     <Filter Include="Base\Base manager">
       <UniqueIdentifier>{4217eb7a-8331-43af-a8f9-53709f9a4819}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Windows">
-      <UniqueIdentifier>{37f9e84f-da01-4629-8588-d1cebd6e3e8b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Windows\TestWindow">
-      <UniqueIdentifier>{997e9b66-e287-4b86-8477-b3a4ba0de88a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Mod manager">
       <UniqueIdentifier>{ab54f468-c8d3-406f-93d1-12799f06255c}</UniqueIdentifier>
     </Filter>
@@ -26,8 +20,23 @@
     <Filter Include="Pivot">
       <UniqueIdentifier>{5be29986-cacb-4877-a43c-49ae12a65edf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Windows\CamWindow">
+    <Filter Include="Mods">
+      <UniqueIdentifier>{d560f32c-7ae5-47ad-92b1-d91dd15df8c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mods\Camera">
+      <UniqueIdentifier>{3b0af85b-2e6c-4582-8022-fc638eda9a8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mods\Camera\CamWindow">
       <UniqueIdentifier>{17a6d183-8924-4128-aae6-fa248a1e115a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mods\Effects">
+      <UniqueIdentifier>{c38a951d-20b7-4555-b34f-636e3d2c32e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mods\Effects\EffectsWindow">
+      <UniqueIdentifier>{997e9b66-e287-4b86-8477-b3a4ba0de88a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pivot\MainForm">
+      <UniqueIdentifier>{7ebde730-a8f3-4f14-bc2f-9061741d485b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -37,17 +46,23 @@
     <ClCompile Include="Base.cpp">
       <Filter>Base\Base manager</Filter>
     </ClCompile>
-    <ClCompile Include="TestWindow.cpp">
-      <Filter>Windows\TestWindow</Filter>
-    </ClCompile>
     <ClCompile Include="ModManager.cpp">
       <Filter>Mod manager</Filter>
     </ClCompile>
-    <ClCompile Include="Pivot.cpp">
-      <Filter>Pivot</Filter>
-    </ClCompile>
     <ClCompile Include="CamWindow.cpp">
-      <Filter>Base</Filter>
+      <Filter>Mods\Camera\CamWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectsWindow.cpp">
+      <Filter>Mods\Effects\EffectsWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects.cpp">
+      <Filter>Mods\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Mods\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="MainForm.cpp">
+      <Filter>Pivot\MainForm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -63,9 +78,6 @@
     <ClInclude Include="CBaseWindow.h">
       <Filter>Base\CBaseWindow</Filter>
     </ClInclude>
-    <ClInclude Include="TestWindow.h">
-      <Filter>Windows\TestWindow</Filter>
-    </ClInclude>
     <ClInclude Include="ModManager.h">
       <Filter>Mod manager</Filter>
     </ClInclude>
@@ -76,7 +88,22 @@
       <Filter>Base\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="CamWindow.h">
-      <Filter>Windows\CamWindow</Filter>
+      <Filter>Mods\Camera\CamWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="JumpHook.h">
+      <Filter>Base\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectsWindow.h">
+      <Filter>Mods\Effects\EffectsWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects.h">
+      <Filter>Mods\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Mods\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="MainForm.h">
+      <Filter>Pivot\MainForm</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,16 +1,17 @@
 #include "ModManager.h"
 #include "Base.h"
+#include "Pivot.h"
 
-#include "TestWindow.h"
-#include "CamWindow.h"
+#include "Effects.h"
+#include "Camera.h"
 
 /*
  *	Description:
  *		Manages the mod's user options / controls, has events, etc.
  *
- *		Add your options in 'AddOptions' (Obviously...)
+ *		Add your options in 'AddOptions' (Obviously...),
  *		Check if your control is being clicked in 'OnPivotWndproc'
- *		I plan to simplify this further so you can just check
+ *		I plan to simplify this further so you can just check.
  */
 
 class CModManager gMod;
@@ -26,6 +27,7 @@ class CModManager gMod;
 #define MENU_PREFS 0xC00L
 #define MENU_ABOUT 123123123
 
+#include <windowsx.h>
 LRESULT WINAPI CModManager::OnPivotWndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
@@ -70,101 +72,46 @@ LRESULT WINAPI CModManager::OnPivotWndproc(HWND hwnd, UINT msg, WPARAM wparam, L
 	return CallWindowProc(gBase.GetPivotWndProc(), hwnd, msg, wparam, lparam);
 }
 
-BOOL WINAPI CModManager::OnLineTo(HDC hdc, int x, int y)
+void CModManager::OnDrawOverlay(HDC hdc)
 {
-	if (gMod.outline || gMod.wacky || gMod.shaky)
-	{
-		POINT prev; // Get original line pos and color
-		MoveToEx(hdc, 0, 0, &prev);
-		// Move line by 3 px and re-draw with lighter color
-		static HPEN hPen = nullptr;
-		if (!hPen)
-		{
-			LOGPEN pen_info;
-			pen_info.lopnColor = RGB(255, 0, 0);
-			pen_info.lopnStyle = PS_SOLID;
-			pen_info.lopnWidth.x = 25;
-			hPen = CreatePenIndirect(&pen_info);
-		}
-		if (gMod.outline)
-		{
-			HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
-			MoveToEx(hdc, prev.x - 3, prev.y - 3, nullptr);
-			gBase.LineTo(hdc, x, y);
-			SelectObject(hdc, hOldPen);
-		}
-		if (gMod.shaky)
-		{
-			int random = (rand() % 6) - 3;
-			MoveToEx(hdc, prev.x + random, prev.y - random, nullptr);
-			gBase.LineTo(hdc, x - random, y - random);
-		}
-		else
-			MoveToEx(hdc, prev.x, prev.y, nullptr);
-	}
+	gCam.OnDrawOverlay(hdc);
 
-	BOOL result = gBase.LineTo(hdc, x, y);
+	RECT idk{ 5, 5, 420, 420 };
+	SetTextColor(hdc, RGB(0, 0, 0));
+	auto prevCol = SetBkColor(hdc, RGB(200, 200, 200));
+	auto prevFont = SelectObject(hdc, gBase.GetFont());
 
-	if (CCamWindow::Instance().CamEnabled())
-	{
-		RECT rect{ 25, 25, 100, 500 };
+	char buff[32];
+	sprintf_s(buff, sizeof(buff), "%i, \t%i", Pivot::pMainForm->GetMouse().x, Pivot::pMainForm->GetMouse().y);
 
-		SetTextColor(hdc, RGB(0, 0, 0));
-		COLORREF prevCol = SetBkColor(hdc, RGB(200, 200, 200));
-		HFONT hOldFont = (HFONT)SelectObject(hdc, gBase.GetFont());
-		DrawText(hdc, "Camera", -1, &rect, DT_LEFT | DT_TOP);
-		SelectObject(hdc, hOldFont);
+	// Draw the text, top-left aligned
+	DrawText(hdc, buff, -1, &idk, DT_LEFT | DT_TOP);
 
-		SetBkColor(hdc, RGB(0, 64, 128));
+	SetBkColor(hdc, prevCol);
+	SelectObject(hdc, prevFont);
+}
 
-		static HBRUSH hBrush = nullptr;
-		if (!hBrush)
-		{
-			LOGBRUSH br_info;
-			br_info.lbColor = RGB(0, 128, 255);
-			br_info.lbStyle = BS_SOLID;
-			hBrush = CreateBrushIndirect(&br_info);
-		}
+void CModManager::OnMouseMove()
+{
+	gCam.OnMouseMove();
+}
 
-		rect = RECT{ 25, 45, 25 + 450, 45 + 300 };
-		auto hOld = SelectObject(hdc, hBrush);
-		FrameRect(hdc, &rect, hBrush);
-		SelectObject(hdc, hOld);
+void CModManager::OnMouseClick()
+{
+	gCam.OnMouseClick();
+}
 
-		static HPEN hPen = nullptr;
-		if (!hPen)
-		{
-			LOGPEN pen_info;
-			pen_info.lopnColor = RGB(255, 0, 0);
-			pen_info.lopnStyle = PS_DOT;
-			pen_info.lopnWidth.x = 1;
-			hPen = CreatePenIndirect(&pen_info);
-		}
+void CModManager::OnMouseRelease()
+{
+	gCam.OnMouseRelease();
+}
 
-		POINT prev; // Get original line pos and color
-		MoveToEx(hdc, 0, 0, &prev);
-
-		hOld = SelectObject(hdc, hPen);
-
-		int _x = 25, _y = 45, w = 450, h = 300;
-
-		MoveToEx(hdc, _x + (w / 3), _y, 0);
-		gBase.LineTo(hdc, _x + (w / 3), _y + h);
-
-		MoveToEx(hdc, _x + (w / 3) * 2, _y, 0);
-		gBase.LineTo(hdc, _x + (w / 3) * 2, _y + h);
-
-		MoveToEx(hdc, _x, _y + (h / 3), 0);
-		gBase.LineTo(hdc, _x + w, _y + (h / 3));
-
-		MoveToEx(hdc, _x, _y + (h / 3) * 2, 0);
-		gBase.LineTo(hdc, _x + w, _y + (h / 3) * 2);
-
-		SelectObject(hdc, hOld);
-		MoveToEx(hdc, prev.x, prev.y, nullptr);
-	}
-	
-	return gBase.LineTo(hdc, x, y);
+BOOL WINAPI CModManager::OnLineTo(_In_ HDC hdc, _In_ int x, _In_ int y)
+{
+	gFx.OnLineTo(hdc, x, y);
+	if (!gCam.OnLineTo(hdc, x, y))
+		return gBase.LineTo(hdc, x, y);
+	return false;
 }
 
 void CModManager::AddOptions(HMENU hmenu, UINT item, BOOL fByPosition, LPCMENUITEMINFOA lpmi)
@@ -197,4 +144,16 @@ void CModManager::RunWindows()
 
 	if (!bRunning)
 		SuspendThread(gBase.GetMainThread());
+}
+
+bool CModManager::IsMouseOver(int x, int y, int w, int h) const
+{
+	POINT m = Pivot::pMainForm->GetMouse();
+	return m.x >= x && m.x <= x + w && m.y >= y && m.y <= y + h;
+}
+
+bool CModManager::WasMouseOver(int x, int y, int w, int h) const
+{
+	POINT m = Pivot::pMainForm->GetPmouse();
+	return m.x >= x && m.x <= x + w && m.y >= y && m.y <= y + h;
 }

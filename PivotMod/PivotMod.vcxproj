@@ -23,7 +23,7 @@
     <ProjectGuid>{854E3389-355E-4440-9EF5-10591A53C62E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>PivotMod</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -92,6 +92,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;PIVOTMOD_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
@@ -124,6 +125,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;PIVOTMOD_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -154,21 +157,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Base.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CamWindow.cpp" />
     <ClCompile Include="DLLMain.cpp" />
-    <ClCompile Include="Pivot.cpp" />
-    <ClCompile Include="TestWindow.cpp" />
+    <ClCompile Include="Effects.cpp" />
+    <ClCompile Include="MainForm.cpp" />
+    <ClCompile Include="EffectsWindow.cpp" />
     <ClCompile Include="ModManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="APIHook.h" />
     <ClInclude Include="Base.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="CamWindow.h" />
     <ClInclude Include="CBaseWindow.h" />
     <ClInclude Include="CMenuItem.h" />
+    <ClInclude Include="Effects.h" />
+    <ClInclude Include="JumpHook.h" />
+    <ClInclude Include="MainForm.h" />
     <ClInclude Include="Pivot.h" />
     <ClInclude Include="Signatures.h" />
-    <ClInclude Include="TestWindow.h" />
+    <ClInclude Include="EffectsWindow.h" />
     <ClInclude Include="ModManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

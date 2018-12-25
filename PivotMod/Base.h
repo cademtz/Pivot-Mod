@@ -13,6 +13,8 @@
  *		unless you're decent with C++ and the Win API.
  */
 
+#define CHECK_SIG(dwSig) if (!dwSig) gBase.FatalError("Used outdated signature in '%s'\nAsk the dev to update this mod!", __FUNCTION__)
+
 class CBaseManager
 {
 public:
@@ -37,17 +39,40 @@ public:
 
 	// - Only runs on DLL_ATTACH
 	void OnAttach(HINSTANCE Instance);
+
+private:
 	// - Only runs when the process calls InsertMenuItemA
-	static BOOL WINAPI OnInsertMenuItem(_In_ HMENU hmenu, _In_ UINT item, _In_ BOOL fByPosition, _In_ LPCMENUITEMINFOA lpmi);
+	static BOOL WINAPI Hooked_InsertMenuItem(_In_ HMENU hmenu, _In_ UINT item, _In_ BOOL fByPosition, _In_ LPCMENUITEMINFOA lpmi);
+	// - Only runs when Pivot calls TMainForm::Create
+	// - Used for getting a pointer to the CMainForm class
+	static int Hooked_MainFormCreate();
+	// - Only runs when Pivot calls TMainForm::DrawAnimBorderLine
+	// - Used for drawing our tools like camera without affecting export / thumbnails
+	static int Hooked_DrawAnimBorderLine();
+	// - Only runs when Pivot calls TMainForm::EditPaintBoxMouseMove
+	// - Used to get the current mouse position
+	static int Hooked_EditPaintBoxMouseMove(int y, int x);
+	// - Only runs when Pivot calls TMainForm::EditPaintBoxMouseDown
+	// - Used to update the mouse state
+	static int Hooked_EditPaintBoxMouseDown(char arg4, int arg3, int arg2);
+	// - Only runs when Pivot calls TMainForm::EditPaintBoxMouseUp
+	// - Used to update the mouse state
+	static int Hooked_EditPaintBoxMouseUp(char arg5, int arg4, int arg3);
+	// - Only runs when Pivot calls LineTo
+	// - Used to apply effects to Pivot's lines
+	static BOOL WINAPI Hooked_LineTo(_In_ HDC hdc, _In_ int x, _In_ int y);
+
+	// Unused stuff
+
 	// - Only runs when the process calls RegsterClassA
 	static ATOM WINAPI OnRegisterClass(WNDCLASSA *wndc);
 	// - Only runs when the process class CreateWindowExA
-	static HWND WINAPI OnCreateWindow(
+	static HWND WINAPI Hooked_CreateWindow(
 		_In_ DWORD dwExStyle, _In_opt_ LPCSTR lpClassName, _In_opt_ LPCSTR lpWindowName, _In_ DWORD dwStyle,
 		_In_ int X, _In_ int Y, _In_ int nWidth, _In_ int nHeight,
 		_In_opt_ HWND hWndParent, _In_opt_ HMENU hMenu, _In_opt_ HINSTANCE hInstance,
 		_In_opt_ LPVOID lpParam);
-private:
+
 	// - Stored instance of our DLL from DLLMain
 	HINSTANCE hInst;
 	// - Stored handle to our main thread
