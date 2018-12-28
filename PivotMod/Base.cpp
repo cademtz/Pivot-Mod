@@ -19,21 +19,23 @@ CSignatures gSig;
 
 #pragma region Hooking
 
-typedef BOOL(WINAPI* InsertMenuItem_t)(_In_ HMENU hmenu, _In_ UINT item, _In_ BOOL fByPosition, _In_ LPCMENUITEMINFOA lpmi);
-typedef ATOM(WINAPI* RegisterClass_t)(_In_ CONST WNDCLASSA *lpWndClass);
-typedef BOOL(WINAPI* LineTo_t)(_In_ HDC hdc, _In_ int x, _In_ int y);
+typedef BOOL(WINAPI* InsertMenuItem_t)(HMENU hmenu, UINT item, BOOL fByPosition, LPCMENUITEMINFOA lpmi);
+typedef ATOM(WINAPI* RegisterClass_t)(CONST WNDCLASSA *lpWndClass);
+typedef BOOL(WINAPI* LineTo_t)(HDC hdc, int x, int y);
+typedef BOOL(WINAPI* Ellipse_t)(HDC hdc, int top, int left, int right, int bottom);
 typedef HWND(WINAPI* CreateWindow_t)(
-	_In_ DWORD dwExStyle, _In_opt_ LPCSTR lpClassName, _In_opt_ LPCSTR lpWindowName, _In_ DWORD dwStyle,
-	_In_ int X, _In_ int Y, _In_ int nWidth, _In_ int nHeight,
-	_In_opt_ HWND hWndParent, _In_opt_ HMENU hMenu, _In_opt_ HINSTANCE hInstance,
-	_In_opt_ LPVOID lpParam);
+	DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle,
+	int X, int Y, int nWidth, int nHeight,
+	HWND hWndParent, HMENU hMenu, HINSTANCE hInstance,
+	LPVOID lpParam);
 
 
-hook_t hk_InsertMenuItem, hk_RegisterClass, hk_CreateWindow, hk_LineTo;
+hook_t hk_InsertMenuItem, hk_RegisterClass, hk_CreateWindow, hk_LineTo, hk_Ellipse;
 InsertMenuItem_t pInsertMenuItem;
+LineTo_t pLineTo;
+Ellipse_t pEllipse;
 RegisterClass_t pRegisterClass;
 CreateWindow_t pCreateWindow;
-LineTo_t pLineTo;
 
 #include "JumpHook.h"
 CJumpHook jmp_MainFormCreate;
@@ -48,19 +50,22 @@ void CBaseManager::InitHooks()
 	// Then we can insert our hooks to customize Pivot's windows
 
 	hook::InitializeHook(&hk_InsertMenuItem, "user32.dll", "InsertMenuItemA", gBase.Hooked_InsertMenuItem);
+	hook::InitializeHook(&hk_LineTo, "gdi32.dll", "LineTo", gBase.Hooked_LineTo);
+	hook::InitializeHook(&hk_Ellipse, "gdi32.dll", "Ellipse", gBase.Hooked_Ellipse);
 	//hook::InitializeHook(&hk_RegisterClass, "user32.dll", "RegisterClassA", gBase.OnRegisterClass);
 	//hook::InitializeHook(&hk_CreateWindow, "user32.dll", "CreateWindowExA", gBase.Hooked_CreateWindow);
-	hook::InitializeHook(&hk_LineTo, "gdi32.dll", "LineTo", gBase.Hooked_LineTo);
 
 	pInsertMenuItem = (InsertMenuItem_t)hk_InsertMenuItem.APIFunction;
+	pLineTo = (LineTo_t)hk_LineTo.APIFunction;
+	pEllipse = (Ellipse_t)hk_Ellipse.APIFunction;
 	//pRegisterClass = (RegisterClass_t)hk_RegisterClass.APIFunction;
 	//pCreateWindow = (CreateWindow_t)hk_CreateWindow.APIFunction;
-	pLineTo = (LineTo_t)hk_LineTo.APIFunction;
 
 	hook::InsertHook(&hk_InsertMenuItem);
+	hook::InsertHook(&hk_LineTo);
+	hook::InsertHook(&hk_Ellipse);
 	//hook::InsertHook(&hk_RegisterClass);
 	//hook::InsertHook(&hk_CreateWindow);
-	hook::InsertHook(&hk_LineTo);
 
 	DWORD pMainFormCreate = gSig.GetPivotSig("55 8B EC 6A 00 53 56 57 8B F0");
 	DWORD pDrawAnimBorderLine = gSig.GetPivotSig("55 8B EC 53 56 57 8B D9 8B FA");
@@ -130,7 +135,7 @@ void CBaseManager::OnAttach(HINSTANCE Instance)
 }
 
 #include "CMenuItem.h"
-BOOL WINAPI CBaseManager::Hooked_InsertMenuItem(_In_ HMENU hmenu, _In_ UINT item, _In_ BOOL fByPosition, _In_ LPCMENUITEMINFOA lpmi)
+BOOL WINAPI CBaseManager::Hooked_InsertMenuItem(HMENU hmenu, UINT item, BOOL fByPosition, LPCMENUITEMINFOA lpmi)
 {
 	if (!strcmp(lpmi->dwTypeData, "&Help"))
 	{
@@ -261,9 +266,14 @@ int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseUp(char arg5, int ar
 	}
 }
 
-BOOL WINAPI CBaseManager::Hooked_LineTo(_In_ HDC hdc, _In_ int x, _In_ int y)
+BOOL WINAPI CBaseManager::Hooked_LineTo(HDC hdc, int x, int y)
 {
 	return gMod.OnLineTo(hdc, x, y);
+}
+
+BOOL WINAPI CBaseManager::Hooked_Ellipse(HDC hdc, int left, int top, int right, int bottom)
+{
+	return gMod.OnEllipse(hdc, left, top, right, bottom);
 }
 
 #pragma endregion
@@ -283,6 +293,11 @@ HFONT CBaseManager::GetFont()
 BOOL WINAPI CBaseManager::LineTo(HDC hdc, int x, int y)
 {
 	return pLineTo(hdc, x, y);
+}
+
+BOOL __stdcall CBaseManager::Ellipse(HDC hdc, int top, int left, int right, int bottom)
+{
+	return pEllipse(hdc, top, left, right, bottom);
 }
 
 void CBaseManager::Error(const char* szFormat, const char* szArgs, ...)
@@ -324,10 +339,10 @@ ATOM WINAPI CBaseManager::OnRegisterClass(WNDCLASSA * wndc)
 }
 
 HWND WINAPI CBaseManager::Hooked_CreateWindow(
-	_In_ DWORD dwExStyle, _In_opt_ LPCSTR lpClassName, _In_opt_ LPCSTR lpWindowName, _In_ DWORD dwStyle,
-	_In_ int X, _In_ int Y, _In_ int nWidth, _In_ int nHeight,
-	_In_opt_ HWND hWndParent, _In_opt_ HMENU hMenu, _In_opt_ HINSTANCE hInstance,
-	_In_opt_ LPVOID lpParam)
+	DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle,
+	int X, int Y, int nWidth, int nHeight,
+	HWND hWndParent, HMENU hMenu, HINSTANCE hInstance,
+	LPVOID lpParam)
 {
 	if (lpClassName)
 		MessageBoxA(0, lpWindowName, lpClassName, 0);

@@ -70,9 +70,9 @@ HDC CMainForm::GetCanvasHDC()
 	return hdc[1];
 }
 
-const POINT* CMainForm::GetAnimationDimensions()
+const POINT& CMainForm::GetAnimationDimensions()
 {
-	static POINT* dimensions;
+	static POINT* dimensions = nullptr;
 	if (!dimensions)
 	{
 		DWORD offToDimens = gSig.GetPivotSig("A1 ? ? ? ? 8B 55 FC 89 10");
@@ -80,5 +80,25 @@ const POINT* CMainForm::GetAnimationDimensions()
 		dimensions = **(POINT***)(offToDimens + 1);
 	}
 
-	return dimensions;
+	return *dimensions;
+}
+
+const BITMAP& CMainForm::GetCanvasBitmap()
+{
+	static BITMAP bmp;
+	GetObject(GetCurrentObject(GetCanvasHDC(), OBJ_BITMAP), sizeof(BITMAP), &bmp);
+	return bmp;
+}
+
+const POINT& CMainForm::GetCanvasCorner()
+{
+	static POINT topleft;
+
+	auto bmp = GetCanvasBitmap();
+	auto size = GetAnimationDimensions();
+
+	topleft.x = (bmp.bmWidth / 2) - (size.x / 2);
+	topleft.y = (bmp.bmHeight / 2) - (size.y / 2);
+
+	return topleft;
 }

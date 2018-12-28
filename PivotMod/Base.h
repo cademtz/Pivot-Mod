@@ -31,6 +31,8 @@ public:
 
 	// - Call original pointer to LineTo
 	static BOOL WINAPI LineTo(HDC hdc, int x, int y);
+	// - Call original pointer to Ellipse
+	static BOOL WINAPI Ellipse(HDC hdc, int top, int left, int right, int bottom);
 
 	// - Gives the user a formatted warning message
 	static void Error(const char* szFormat, const char* szArgs = nullptr, ...);
@@ -42,7 +44,7 @@ public:
 
 private:
 	// - Only runs when the process calls InsertMenuItemA
-	static BOOL WINAPI Hooked_InsertMenuItem(_In_ HMENU hmenu, _In_ UINT item, _In_ BOOL fByPosition, _In_ LPCMENUITEMINFOA lpmi);
+	static BOOL WINAPI Hooked_InsertMenuItem(HMENU hmenu, UINT item, BOOL fByPosition, LPCMENUITEMINFOA lpmi);
 	// - Only runs when Pivot calls TMainForm::Create
 	// - Used for getting a pointer to the CMainForm class
 	static int Hooked_MainFormCreate();
@@ -59,8 +61,11 @@ private:
 	// - Used to update the mouse state
 	static int Hooked_EditPaintBoxMouseUp(char arg5, int arg4, int arg3);
 	// - Only runs when Pivot calls LineTo
-	// - Used to apply effects to Pivot's lines
-	static BOOL WINAPI Hooked_LineTo(_In_ HDC hdc, _In_ int x, _In_ int y);
+	// - Used to control Pivot's lines
+	static BOOL WINAPI Hooked_LineTo(HDC hdc, int x, int y);
+	// - Only runs when Pivot calls Ellipse
+	// - Used to control Pivot's circles
+	static BOOL WINAPI Hooked_Ellipse(HDC hdc, int left, int top, int right, int bottom);
 
 	// Unused stuff
 
@@ -68,10 +73,10 @@ private:
 	static ATOM WINAPI OnRegisterClass(WNDCLASSA *wndc);
 	// - Only runs when the process class CreateWindowExA
 	static HWND WINAPI Hooked_CreateWindow(
-		_In_ DWORD dwExStyle, _In_opt_ LPCSTR lpClassName, _In_opt_ LPCSTR lpWindowName, _In_ DWORD dwStyle,
-		_In_ int X, _In_ int Y, _In_ int nWidth, _In_ int nHeight,
-		_In_opt_ HWND hWndParent, _In_opt_ HMENU hMenu, _In_opt_ HINSTANCE hInstance,
-		_In_opt_ LPVOID lpParam);
+		DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle,
+		int X, int Y, int nWidth, int nHeight,
+		HWND hWndParent, HMENU hMenu, HINSTANCE hInstance,
+		LPVOID lpParam);
 
 	// - Stored instance of our DLL from DLLMain
 	HINSTANCE hInst;

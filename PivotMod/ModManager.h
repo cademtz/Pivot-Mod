@@ -23,8 +23,9 @@ public:
 	// - Only runs when the mouse button is released
 	static void OnMouseRelease();
 	// - Runs every time Pivot draws a line / segment
-	// Using const magically makes this compile???
-	BOOL WINAPI OnLineTo(_In_ HDC hdc, _In_ int x, _In_ int y);
+	BOOL WINAPI OnLineTo(HDC hdc, int x, int y);
+	// - Runs every time Pivot draws a cricle
+	BOOL WINAPI OnEllipse(HDC hdc, int left, int top, int right, int bottom);
 	
 	// - Called when Pivot is adding controls to the toolbar
 	// - This is where we can add our own options

@@ -30,7 +30,12 @@ public:
 	void DrawAnimBorderLine();
 
 	// - Returns the animation dimensions
-	const POINT* GetAnimationDimensions();
+	const POINT& GetAnimationDimensions();
+	// - Updates and returns bitmap information of Pivot's canvas
+	const BITMAP& GetCanvasBitmap();
+	// - Updates and returns the top-left corner of Pivot's canvas
+	const POINT& GetCanvasCorner();
+
 	// - Returns the device context of Pivot's canvas
 	HDC GetCanvasHDC();
 	// - Returns the current frame

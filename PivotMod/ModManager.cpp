@@ -27,7 +27,6 @@ class CModManager gMod;
 #define MENU_PREFS 0xC00L
 #define MENU_ABOUT 123123123
 
-#include <windowsx.h>
 LRESULT WINAPI CModManager::OnPivotWndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
@@ -75,20 +74,6 @@ LRESULT WINAPI CModManager::OnPivotWndproc(HWND hwnd, UINT msg, WPARAM wparam, L
 void CModManager::OnDrawOverlay(HDC hdc)
 {
 	gCam.OnDrawOverlay(hdc);
-
-	RECT idk{ 5, 5, 420, 420 };
-	SetTextColor(hdc, RGB(0, 0, 0));
-	auto prevCol = SetBkColor(hdc, RGB(200, 200, 200));
-	auto prevFont = SelectObject(hdc, gBase.GetFont());
-
-	char buff[32];
-	sprintf_s(buff, sizeof(buff), "%i, \t%i", Pivot::pMainForm->GetMouse().x, Pivot::pMainForm->GetMouse().y);
-
-	// Draw the text, top-left aligned
-	DrawText(hdc, buff, -1, &idk, DT_LEFT | DT_TOP);
-
-	SetBkColor(hdc, prevCol);
-	SelectObject(hdc, prevFont);
 }
 
 void CModManager::OnMouseMove()
@@ -106,7 +91,7 @@ void CModManager::OnMouseRelease()
 	gCam.OnMouseRelease();
 }
 
-BOOL WINAPI CModManager::OnLineTo(_In_ HDC hdc, _In_ int x, _In_ int y)
+BOOL WINAPI CModManager::OnLineTo(HDC hdc, int x, int y)
 {
 	gFx.OnLineTo(hdc, x, y);
 	if (!gCam.OnLineTo(hdc, x, y))
@@ -114,11 +99,17 @@ BOOL WINAPI CModManager::OnLineTo(_In_ HDC hdc, _In_ int x, _In_ int y)
 	return false;
 }
 
+BOOL WINAPI CModManager::OnEllipse(HDC hdc, int left, int top, int right, int bottom)
+{
+	if (!gCam.OnEllipse(hdc, left, top, right, bottom))
+		return gBase.Ellipse(hdc, left, top, right, bottom);
+	return false;
+}
+
 void CModManager::AddOptions(HMENU hmenu, UINT item, BOOL fByPosition, LPCMENUITEMINFOA lpmi)
 {
 	// Make new menu items we can click
 	// Assign them a unique number. That number is used to tell which option was clicked
-	// You can 
 	CMenuItem camera("Camera", MENU_CAMERA);
 	CMenuItem effects("Effects", MENU_PREFS);
 	CMenuItem about("About", MENU_ABOUT);
