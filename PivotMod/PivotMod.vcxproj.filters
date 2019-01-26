@@ -38,6 +38,15 @@
     <Filter Include="Pivot\MainForm">
       <UniqueIdentifier>{7ebde730-a8f3-4f14-bc2f-9061741d485b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mod manager\Mod manager">
+      <UniqueIdentifier>{1c311ad8-84b3-4adf-8222-6abdb58c2dc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mod manager\Frames">
+      <UniqueIdentifier>{e67d333b-9d03-4086-9ad5-56e834567208}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mod manager\Frames\CFrame">
+      <UniqueIdentifier>{ac20ae0c-97d8-4aef-8d96-3a790a9ff60c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLMain.cpp">
@@ -45,9 +54,6 @@
     </ClCompile>
     <ClCompile Include="Base.cpp">
       <Filter>Base\Base manager</Filter>
-    </ClCompile>
-    <ClCompile Include="ModManager.cpp">
-      <Filter>Mod manager</Filter>
     </ClCompile>
     <ClCompile Include="CamWindow.cpp">
       <Filter>Mods\Camera\CamWindow</Filter>
@@ -64,6 +70,15 @@
     <ClCompile Include="MainForm.cpp">
       <Filter>Pivot\MainForm</Filter>
     </ClCompile>
+    <ClCompile Include="ModManager.cpp">
+      <Filter>Mod manager\Mod manager</Filter>
+    </ClCompile>
+    <ClCompile Include="CFrame.cpp">
+      <Filter>Mod manager\Frames\CFrame</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameManager.cpp">
+      <Filter>Mod manager\Frames</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CMenuItem.h">
@@ -77,9 +92,6 @@
     </ClInclude>
     <ClInclude Include="CBaseWindow.h">
       <Filter>Base\CBaseWindow</Filter>
-    </ClInclude>
-    <ClInclude Include="ModManager.h">
-      <Filter>Mod manager</Filter>
     </ClInclude>
     <ClInclude Include="Pivot.h">
       <Filter>Pivot</Filter>
@@ -104,6 +116,15 @@
     </ClInclude>
     <ClInclude Include="MainForm.h">
       <Filter>Pivot\MainForm</Filter>
+    </ClInclude>
+    <ClInclude Include="ModManager.h">
+      <Filter>Mod manager\Mod manager</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameManager.h">
+      <Filter>Mod manager\Frames</Filter>
+    </ClInclude>
+    <ClInclude Include="CFrame.h">
+      <Filter>Mod manager\Frames\CFrame</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

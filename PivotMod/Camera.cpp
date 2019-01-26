@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include "Pivot.h"
 #include "ModManager.h"
+#include "FrameManager.h"
 
 /*
  *	Description:
@@ -13,6 +14,13 @@ CCamera gCam;
 
 HBRUSH CCamera::hbrBorder = nullptr;
 HPEN CCamera::hpLines = nullptr;
+
+CTypeHandle CCamera::CamPos()
+{
+	// Initialize new data to put on the timeline
+	static CTypeHandle cam_pos = gFrames.AddType(POINT{ 0, 0 });
+	return cam_pos;
+}
 
 CCamera::CCamera()
 {
@@ -34,13 +42,29 @@ CCamera::CCamera()
 		pen_info.lopnWidth.x = 1;
 		hpLines = CreatePenIndirect(&pen_info);
 	}
+
+	
 }
 
-const POINT& CCamera::AbsolutePos()
+const POINT & CCamera::GetPos(int Frame)
+{
+	if (Frame == -1)
+		Frame = Pivot::pMainForm->GetCurrentFrame();
+	return *gFrames.GetData<POINT>(Frame, CamPos());
+}
+
+void CCamera::SetPos(const POINT& NewPos, int Frame)
+{
+	if (Frame == -1)
+		Frame = Pivot::pMainForm->GetCurrentFrame();
+	*gFrames.GetData<POINT>(Frame, CamPos()) = NewPos;
+}
+
+const POINT& CCamera::AbsolutePos(int Frame)
 {
 	static POINT absolute;
-	auto corner = Pivot::pMainForm->GetCanvasCorner();
-	absolute = { cam_pos.x + corner.x, cam_pos.y + corner.y };
+	POINT corner = Pivot::pMainForm->GetCanvasCorner(), pos = GetPos(Frame);
+	absolute = { pos.x + corner.x, pos.y + corner.y };
 	return absolute;
 }
 
@@ -49,11 +73,11 @@ bool CCamera::OnLineTo(HDC hdc, int x, int y)
 	if (bEnabled) // Disable while the camera is shown
 		return false;
 
-	x -= cam_pos.x, y -= cam_pos.y;
+	x -= GetPos().x, y -= GetPos().y;
 
 	POINT prev;
 	MoveToEx(hdc, 0, 0, &prev);
-	MoveToEx(hdc, prev.x - cam_pos.x, prev.y - cam_pos.y, nullptr);
+	MoveToEx(hdc, prev.x - GetPos().x, prev.y - GetPos().y, nullptr);
 	gBase.LineTo(hdc, x, y);
 
 	return true;
@@ -64,7 +88,7 @@ bool CCamera::OnEllipse(HDC hdc, int top, int left, int right, int bottom)
 	if (bEnabled) // Disable while the camera is shown
 		return false;
 
-	gBase.Ellipse(hdc, top - cam_pos.x, left - cam_pos.y, right - cam_pos.x, bottom - cam_pos.y);
+	gBase.Ellipse(hdc, top - GetPos().x, left - GetPos().y, right - GetPos().x, bottom - GetPos().y);
 	return true;
 }
 
@@ -123,9 +147,9 @@ void CCamera::OnMouseMove()
 	if (bDrag)
 	{
 		POINT m = Pivot::pMainForm->GetMouse(), pm = Pivot::pMainForm->GetPmouse();
-		cam_pos.x += m.x - pm.x, cam_pos.y += m.y - pm.y;
-		Pivot::pMainForm->DrawFigures(); // Redraw our camera
+		SetPos({ GetPos().x + m.x - pm.x, GetPos().y + m.y - pm.y });
 
+		Pivot::pMainForm->DrawFigures(); // Redraw our camera
 		return; // We don't need to know if we're hovered while dragging
 	}
 
@@ -148,9 +172,14 @@ void CCamera::OnMouseClick()
 {
 	// if we aren't hovering and clicking the camera, then don't drag it
 	if (!bEnabled || !bHovered || !Pivot::pMainForm->IsLeftClicked())
+	{
+		if (gMod.IsMouseBlocked())
+			gMod.ReleaseMouse();
 		return;
+	}
 
 	bDrag = true;
+	gMod.BlockMouse();
 	Pivot::pMainForm->DrawFigures();
 }
 

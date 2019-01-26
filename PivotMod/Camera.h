@@ -1,5 +1,6 @@
 #pragma once
 #include "CamWindow.h"
+#include "FrameManager.h"
 
 /*
  *	Description:
@@ -20,14 +21,20 @@ class CCamera
 	bool bHovered = false;
 	// - Indicates if we're dragging the camera
 	bool bDrag = false;
-
+	// - Handle to camera position data in the frame manager, relative to the animation canvas
+	CTypeHandle CamPos();
 public:
 	CCamera();
 
-	// - Position of the camera, relative to the animation canvas
-	POINT cam_pos = { 0, 0 };
-	// - Returns the position of the camera relative to the whole window
-	const POINT& AbsolutePos();
+	// - Returns current camera position at frame 'Frame'
+	// - Leave 'Frame' default to change current frame
+	const POINT& GetPos(int Frame = -1);
+	// - Sets the current camera position at frame 'Frame'
+	// - Leave 'Frame' default to change current frame
+	void SetPos(const POINT& NewPos, int Frame = -1);
+	// - Returns the camera position relative to the whole window at frame 'Frame'
+	// - Leave 'Frame' default to change current frame
+	const POINT& AbsolutePos(int Frame = -1);
 
 	bool OnLineTo(HDC hdc, int x, int y);
 	bool OnEllipse(HDC hdc, int top, int left, int right, int bottom);

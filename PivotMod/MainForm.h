@@ -13,6 +13,15 @@ enum class e_mb : char
 	rdown
 };
 
+typedef struct _AnimInfo
+{
+	int frame_count;
+	char _pad0[8];
+	POINT dimensions;
+	int _pad1[8];
+	int background_count;
+} AnimInfo_t;
+
 class CMainForm
 {
 	// - Holds the current mouse position
@@ -22,6 +31,7 @@ class CMainForm
 	// - Holds the current mouse state
 	static e_mb mb;
 
+	const AnimInfo_t& GetAnimInfo();
 public:
 	// - Calls TMainForm::DrawFigures
 	// - When changing figures / properties, use this to update the preview afterwards
@@ -30,16 +40,19 @@ public:
 	void DrawAnimBorderLine();
 
 	// - Returns the animation dimensions
-	const POINT& GetAnimationDimensions();
+	inline const POINT& GetAnimationDimensions() { return GetAnimInfo().dimensions; }
 	// - Updates and returns bitmap information of Pivot's canvas
 	const BITMAP& GetCanvasBitmap();
 	// - Updates and returns the top-left corner of Pivot's canvas
 	const POINT& GetCanvasCorner();
-
 	// - Returns the device context of Pivot's canvas
 	HDC GetCanvasHDC();
+	// - Returns number of frames in the current animation
+	inline const int GetFrameCount() { return GetAnimInfo().frame_count; }
 	// - Returns the current frame
 	inline int GetCurrentFrame() const { return *(int*)(this + 0x4B0); }
+	// - Returns true if the animation is playing
+	inline bool IsPlaying() const { return *(bool*)(*(DWORD *)(this + 0x5B8) + 0x40); }
 
 	// - Returns the current mouse position
 	inline const POINT& GetMouse() const { return mouse; }

@@ -38,11 +38,13 @@ RegisterClass_t pRegisterClass;
 CreateWindow_t pCreateWindow;
 
 #include "JumpHook.h"
-CJumpHook jmp_MainFormCreate;
-CJumpHook jmp_DrawAnimBorder;
-CJumpHook jmp_PaintBoxMouseMove;
-CJumpHook jmp_PaintBoxMouseDown;
-CJumpHook jmp_PaintBoxMouseUp;
+CJumpHook
+	jmp_MainFormCreate,
+	jmp_DrawAnimBorder,
+	jmp_PaintBoxMouseMove,
+	jmp_PaintBoxMouseDown,
+	jmp_PaintBoxMouseUp,
+	jmp_SetFrameNumber;
 
 void CBaseManager::InitHooks()
 {
@@ -52,37 +54,36 @@ void CBaseManager::InitHooks()
 	hook::InitializeHook(&hk_InsertMenuItem, "user32.dll", "InsertMenuItemA", gBase.Hooked_InsertMenuItem);
 	hook::InitializeHook(&hk_LineTo, "gdi32.dll", "LineTo", gBase.Hooked_LineTo);
 	hook::InitializeHook(&hk_Ellipse, "gdi32.dll", "Ellipse", gBase.Hooked_Ellipse);
-	//hook::InitializeHook(&hk_RegisterClass, "user32.dll", "RegisterClassA", gBase.OnRegisterClass);
-	//hook::InitializeHook(&hk_CreateWindow, "user32.dll", "CreateWindowExA", gBase.Hooked_CreateWindow);
 
 	pInsertMenuItem = (InsertMenuItem_t)hk_InsertMenuItem.APIFunction;
 	pLineTo = (LineTo_t)hk_LineTo.APIFunction;
 	pEllipse = (Ellipse_t)hk_Ellipse.APIFunction;
-	//pRegisterClass = (RegisterClass_t)hk_RegisterClass.APIFunction;
-	//pCreateWindow = (CreateWindow_t)hk_CreateWindow.APIFunction;
 
 	hook::InsertHook(&hk_InsertMenuItem);
 	hook::InsertHook(&hk_LineTo);
 	hook::InsertHook(&hk_Ellipse);
-	//hook::InsertHook(&hk_RegisterClass);
-	//hook::InsertHook(&hk_CreateWindow);
 
-	DWORD pMainFormCreate = gSig.GetPivotSig("55 8B EC 6A 00 53 56 57 8B F0");
-	DWORD pDrawAnimBorderLine = gSig.GetPivotSig("55 8B EC 53 56 57 8B D9 8B FA");
-	DWORD pPaintBoxMouseMove = gSig.GetPivotSig("55 8B EC 83 C4 D4 53 56 57 8B D8 33 D2");
-	DWORD pPaintBoxMouseDown = gSig.GetPivotSig("55 8B EC 83 C4 EC 53 56 57 8B D8 8B 7D 0C");
-	DWORD pPaintBoxMouseUp = gSig.GetPivotSig("55 8B EC 83 C4 F0 53 56 57 8B F0 8B 45 10");
+	DWORD pMainFormCreate =		gSig.GetPivotSig("55 8B EC 6A 00 53 56 57 8B F0");
+	DWORD pDrawAnimBorderLine =	gSig.GetPivotSig("55 8B EC 53 56 57 8B D9 8B FA");
+	DWORD pPaintBoxMouseMove =	gSig.GetPivotSig("55 8B EC 83 C4 D4 53 56 57 8B D8 33 D2");
+	DWORD pPaintBoxMouseDown =	gSig.GetPivotSig("55 8B EC 83 C4 EC 53 56 57 8B D8 8B 7D 0C");
+	DWORD pPaintBoxMouseUp =	gSig.GetPivotSig("55 8B EC 83 C4 F0 53 56 57 8B F0 8B 45 10");
+	DWORD pSetFrameNumber =		gSig.GetPivotSig("E8 ? ? ? ? C6 45 FF 01 83 BE");
 	CHECK_SIG(pMainFormCreate);
 	CHECK_SIG(pDrawAnimBorderLine);
 	CHECK_SIG(pPaintBoxMouseMove);
 	CHECK_SIG(pPaintBoxMouseDown);
 	CHECK_SIG(pPaintBoxMouseUp);
+	CHECK_SIG(pSetFrameNumber);
+
+	pSetFrameNumber = (*(DWORD*)(pSetFrameNumber + 0x1) + pSetFrameNumber + 0x5);
 
 	jmp_MainFormCreate.Hook(pMainFormCreate, gBase.Hooked_MainFormCreate, 5);
 	jmp_DrawAnimBorder.Hook(pDrawAnimBorderLine, gBase.Hooked_DrawAnimBorderLine, 5);
 	jmp_PaintBoxMouseMove.Hook(pPaintBoxMouseMove, gBase.Hooked_EditPaintBoxMouseMove, 6);
 	jmp_PaintBoxMouseDown.Hook(pPaintBoxMouseDown, gBase.Hooked_EditPaintBoxMouseDown, 6);
 	jmp_PaintBoxMouseUp.Hook(pPaintBoxMouseUp, gBase.Hooked_EditPaintBoxMouseUp, 6);
+	jmp_SetFrameNumber.Hook(pSetFrameNumber, gBase.Hooked_SetFrameNumber, 5);
 }
 
 #pragma endregion
@@ -101,7 +102,7 @@ DWORD WINAPI CBaseManager::MainThread(LPVOID pArgs)
 	// Then we hook the window to allow control over the toolbar
 
 	HWND mainWnd = GetForegroundWindow();
-	while (!mainWnd || !GetWindowText(mainWnd, wndBuff, sizeof(wndBuff)) || strcmp(wndBuff, "Pivot Modded"))
+	while (!mainWnd || !GetWindowText(mainWnd, wndBuff, sizeof(wndBuff)) || strcmp(wndBuff, "Pivot Animator"))
 	{
 		Sleep(100);
 		mainWnd = GetForegroundWindow();
@@ -157,7 +158,6 @@ int __declspec(naked) CBaseManager::Hooked_MainFormCreate()
 	}
 
 	pJump = jmp_MainFormCreate.GetOldCode();
-
 	__asm
 	{
 		pop eax
@@ -177,7 +177,6 @@ int __declspec(naked) CBaseManager::Hooked_DrawAnimBorderLine()
 
 	// Get a pointer to the original ASM, and skip over the length where our hook is
 	pJump = jmp_DrawAnimBorder.GetOldCode();
-	
 	// Restore the registers' original values to call the original function
 	__asm
 	{
@@ -195,10 +194,9 @@ int __declspec(naked) CBaseManager::Hooked_DrawAnimBorderLine()
 int tempx, tempy;
 int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseMove(int y, int x)
 {
-	__asm push eax;
-
 	__asm
 	{
+		push eax
 		mov eax, [esp + 8]	// Get y
 		mov [tempy], eax	// Move y to tempy
 		mov eax, [esp + 12]	// Get x
@@ -207,8 +205,8 @@ int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseMove(int y, int x)
 
 	Pivot::pMainForm->UpdateMousePos(tempx, tempy);
 	gMod.OnMouseMove();
-	pJump = jmp_PaintBoxMouseMove.GetOldCode();
 
+	pJump = jmp_PaintBoxMouseMove.GetOldCode();
 	__asm
 	{
 		pop eax
@@ -219,18 +217,25 @@ int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseMove(int y, int x)
 BYTE tempb;
 int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseDown(char arg4, int arg3, int arg2)
 {
-	__asm push eax;
-
 	__asm
 	{
+		push eax
 		mov al, [esp + 10h]
 		mov [tempb], al
 	}
 
 	Pivot::pMainForm->UpdateMouseDown(tempb);
 	gMod.OnMouseClick();
-	pJump = jmp_PaintBoxMouseDown.GetOldCode();
+	if (gMod.IsMouseBlocked())
+	{
+		__asm
+		{
+			pop eax		// Clean up our mess
+			retn 0Ch	// and return like nothing happened...
+		}
+	}
 
+	pJump = jmp_PaintBoxMouseDown.GetOldCode();
 	__asm
 	{
 		pop eax
@@ -238,27 +243,32 @@ int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseDown(char arg4, int 
 	}
 }
 
-void testdown(BYTE state)
-{
-	const char* szState = "Blank";
-	if (state == 0)
-		szState = "Left";
-	else
-		szState = "Right";
-
-	MessageBox(0, szState, "Info", 0);
-}
-
 int __declspec(naked) CBaseManager::Hooked_EditPaintBoxMouseUp(char arg5, int arg4, int arg3)
 {
-	__asm push eax;
-
-	__asm mov [tempb], cl
+	__asm
+	{
+		push eax
+		mov [tempb], cl
+	}
 
 	Pivot::pMainForm->UpdateMouseUp(tempb);
 	gMod.OnMouseRelease();
-	pJump = jmp_PaintBoxMouseUp.GetOldCode();
 
+	pJump = jmp_PaintBoxMouseUp.GetOldCode();
+	__asm
+	{
+		pop eax
+		jmp pJump
+	}
+}
+
+#include "FrameManager.h"
+int __declspec(naked) CBaseManager::Hooked_SetFrameNumber(int EAX, int EBX, int EDI, int ESI)
+{
+	__asm push eax;
+	{ gFrames.OnFramesChanged(); }
+
+	pJump = jmp_SetFrameNumber.GetOldCode();
 	__asm
 	{
 		pop eax
@@ -300,7 +310,7 @@ BOOL __stdcall CBaseManager::Ellipse(HDC hdc, int top, int left, int right, int 
 	return pEllipse(hdc, top, left, right, bottom);
 }
 
-void CBaseManager::Error(const char* szFormat, const char* szArgs, ...)
+void CBaseManager::Error(const char* szFormat, ...)
 {
 	va_list va_alist;
 	char szBuffer[1024] = { 0 };

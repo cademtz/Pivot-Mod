@@ -16,9 +16,6 @@
 
 class CModManager gMod;
 
-// - Determines if a control was selected
-#define IF_CONTROL(YourControl) if (wparam == YourControl)
-
 // Controls need a unique ID so you can tell them apart
 // Just give it whatever name you want and pick a random number!
 // 0x just means it's hex, like color codes: #FFFFFF. I just like silly numbers
@@ -32,8 +29,7 @@ LRESULT WINAPI CModManager::OnPivotWndproc(HWND hwnd, UINT msg, WPARAM wparam, L
 	switch (msg)
 	{
 	case WM_COMMAND: // If we clicked a menu item
-	{
-		IF_CONTROL(MENU_PREFS)
+		if (wparam == MENU_PREFS)
 		{
 			if (!CTestWindow::Instance().Get()) // Only run if the window hasn't been opened
 			{
@@ -49,22 +45,21 @@ LRESULT WINAPI CModManager::OnPivotWndproc(HWND hwnd, UINT msg, WPARAM wparam, L
 				ResumeThread(gBase.GetMainThread());
 			}
 		}
-		IF_CONTROL(MENU_CAMERA)
+		else if (wparam == MENU_CAMERA)
 		{
-			RECT center = CBaseWindow::Center(150, 65);
-			CCamWindow::Instance().Create("Camera", 150, 65, center.left, center.top, WS_SYSMENU);
+			RECT center = CBaseWindow::Center(151, 65);
+			CCamWindow::Instance().Create("Camera", 151, 90, center.left, center.top, WS_SYSMENU);
 			ShowWindow(CCamWindow::Instance().Get(), SW_SHOW);
 			UpdateWindow(CCamWindow::Instance().Get());
 
 			ResumeThread(gBase.GetMainThread());
 		}
-		IF_CONTROL(MENU_ABOUT)
+		else if (wparam == MENU_ABOUT)
 		{
 			// Message box with an OK button and an information icon
 			MessageBox(NULL, "This is a basic mod for Pivot!", "About this mod", MB_OK | MB_ICONINFORMATION);
 		}
 		break;
-	}
 	}
 
 	// Don't mess with this. This sends all user input to Pivot so it won't freeze

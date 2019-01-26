@@ -1,5 +1,14 @@
 #include "MainForm.h"
 #include "Signatures.h"
+#include "Pivot.h"
+
+/*
+ * Description:
+ *		Functions and variables that are part of Pivot's main form
+ *
+ *		Lots of signatures and ASM because all the functions are optimized
+ *		to use ASM registers instead of normal calling conventions
+ */
 
 POINT CMainForm::mouse = { UINT_MAX, UINT_MAX };
 POINT CMainForm::pmouse = mouse;
@@ -10,18 +19,22 @@ void CMainForm::DrawFigures()
 	static DWORD* arg1, *pDrawFigures = nullptr; // Pointer to the function and the arg to pass
 	if (!pDrawFigures) // Get the pointer for the first time
 	{
-		DWORD callToFunc = gSig.GetPivotSig("A1 ? ? ? ? 8B 00 E8 ? ? ? ? C6 45 CF 00");
+		/*DWORD callToFunc = gSig.GetPivotSig("A1 ? ? ? ? 8B 00 E8 ? ? ? ? C6 45 CF 00");
 		CHECK_SIG(callToFunc);
 		arg1 = **(DWORD***)(callToFunc + 0x1); // A1 ? ? ? ? - Points to a variable we need
-		pDrawFigures = (DWORD*)(*(DWORD*)(callToFunc + 0x8) + callToFunc + 0xC); // E8 ? ? ? ? - Relative 32-bit call to function
+		pDrawFigures = (DWORD*)(*(DWORD*)(callToFunc + 0x8) + callToFunc + 0xC); // E8 ? ? ? ? - Relative 32-bit call to function*/
+
+		DWORD funcCode = gSig.GetPivotSig("55 8B EC 83 C4 E8 53 56 57 8B D8 33 C9");
+		CHECK_SIG(funcCode);
+		pDrawFigures = (DWORD*)funcCode;
 	}
 
 	__asm
 	{
 		push eax
-		mov eax, arg1		// The function uses EAX for the argument,
-		mov eax, [eax]		// so we set it to our argument's value
-		call pDrawFigures	//
+		//mov eax, Pivot::pMainForm	// The function uses EAX for the argument,
+		mov eax, [this]				// so we set it to our argument's value
+		call pDrawFigures			//
 		pop eax
 	}
 }
@@ -70,17 +83,17 @@ HDC CMainForm::GetCanvasHDC()
 	return hdc[1];
 }
 
-const POINT& CMainForm::GetAnimationDimensions()
+const AnimInfo_t& CMainForm::GetAnimInfo()
 {
-	static POINT* dimensions = nullptr;
-	if (!dimensions)
+	static AnimInfo_t* animInfo = nullptr;
+	if (!animInfo)
 	{
-		DWORD offToDimens = gSig.GetPivotSig("A1 ? ? ? ? 8B 55 FC 89 10");
-		CHECK_SIG(offToDimens);
-		dimensions = **(POINT***)(offToDimens + 1);
+		DWORD offToInfo = gSig.GetPivotSig("A1 ? ? ? ? 33 D2 89 10 C6 86");
+		CHECK_SIG(offToInfo);
+		animInfo = **(AnimInfo_t***)(offToInfo + 1);
 	}
-
-	return *dimensions;
+	
+	return *animInfo;
 }
 
 const BITMAP& CMainForm::GetCanvasBitmap()

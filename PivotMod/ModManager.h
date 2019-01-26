@@ -5,11 +5,13 @@
  *	Description:
  *		Manages the mod's user options / controls, has events, etc.
  *
- *		For now, this is where you add your controls and windows.
+ *		This class controls most of the functionality.
  */
 
 class CModManager
 {
+	// - Indicates whether we should block the mouse
+	bool bMouseEnabled = true;
 public:
 	// - Only runs when the process sends messages to its main window
 	// Because of macros, IntelliSense keeps farding and pooping the bed, so it looks undefined
@@ -34,8 +36,17 @@ public:
 	// - Suspends MainThread when not currently needed
 	static void RunWindows();
 
+	// - Returns true if the mouse is over a region
 	bool IsMouseOver(int x, int y, int w, int h) const;
+	// - Returns true if the previous mouse position is over a region
 	bool WasMouseOver(int x, int y, int w, int h) const;
+
+	// - Use when you need mouse input without it registering under your controls
+	inline void BlockMouse() { bMouseEnabled = false; }
+	// - Use when you want to restore mouse input to Pivot
+	inline void ReleaseMouse() { bMouseEnabled = true; }
+	// - Returns whether the mouse is currently blocked or not
+	inline bool IsMouseBlocked() { return !bMouseEnabled; }
 };
 
 extern CModManager gMod;

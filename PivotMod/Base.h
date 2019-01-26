@@ -35,7 +35,7 @@ public:
 	static BOOL WINAPI Ellipse(HDC hdc, int top, int left, int right, int bottom);
 
 	// - Gives the user a formatted warning message
-	static void Error(const char* szFormat, const char* szArgs = nullptr, ...);
+	static void Error(const char* szFormat, ...);
 	// - Gives the user an error message and closes the process
 	static void FatalError(const char* szFormat, const char* szArgs = nullptr, ...);
 
@@ -60,6 +60,9 @@ private:
 	// - Only runs when Pivot calls TMainForm::EditPaintBoxMouseUp
 	// - Used to update the mouse state
 	static int Hooked_EditPaintBoxMouseUp(char arg5, int arg4, int arg3);
+	// - Only runs when Pivot calls TMainForm::SetFrameNumber
+	// - Used to update the frame manager's frame count
+	static int Hooked_SetFrameNumber(int EAX, int EBX, int EDI, int ESI);
 	// - Only runs when Pivot calls LineTo
 	// - Used to control Pivot's lines
 	static BOOL WINAPI Hooked_LineTo(HDC hdc, int x, int y);
